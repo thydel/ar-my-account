@@ -1,22 +1,54 @@
 ---
 
-- name: my-account - create user account
+- name: my-account - create user account for {{ my_account_user }}
   user: name={{ my_account_user }} comment='{{ my_account_name }}' shell={{ my_account_shell }}
+
+# vars
 
 - name: my-account - install SSH keys from vars
   authorized_key: user={{ my_account_user }} key="{{ lookup('file', item) }}"
-  whith_items: my_account_ssh_pub_keys
+  with_items: my_account_ssh_pub_keys
 
-- set_facts:
+# set default name
+
+- set_fact:
     rsa: .ssh/id_rsa.pub
+    dsa: .ssh/id_dsa.pub
+
+# rsa
 
 - name: my-account - check SSH keys from default rsa path
   local_action: stat path=~{{ my_account_user }}/{{ rsa }}
-  register: rsa
+  register: rsa_file
+
+- name: my-account - get SSH keys from default rsa path
+  set_fact:
+    rsa_key: "{{ lookup('file', '~' + my_account_user + '/' + rsa ) }}"
+  when: rsa_file.stat.exists
 
 - name: my-account - install SSH keys from default rsa path
-  authorized_key: user={{ my_account_user }} key="{{ lookup('file', my_account_user + '/' + rsa ) }}"
-  when: rsa.stat.exists
+  authorized_key: user={{ my_account_user }} key="{{ rsa_key }}"
+  when: rsa_file.stat.exists and false
+
+# dsa
+
+- name: my-account - check SSH keys from default dsa path
+  local_action: stat path=~{{ my_account_user }}/{{ dsa }}
+  register: dsa_file
+
+- name: my-account - get SSH keys from default dsa path
+  set_fact:
+    dsa_key: "{{ lookup('file', '~' + my_account_user + '/' + dsa ) }}"
+  when: dsa_file.stat.exists
+
+- name: my-account - install SSH keys from default dsa path
+  authorized_key: user={{ my_account_user }} key="{{ dsa_key }}"
+  when: dsa_file.stat.exists
+
+# github
+
+- name: my-account - install httplib2
+  apt: name=python-httplib2
 
 - name: my-account - fetch keys from github user account
   uri: url=https://github.com/{{ my_account_github_user }}.keys return_content=true
@@ -24,5 +56,5 @@
 
 - name: my-account - install keys from github user account
   authorized_key: user={{ my_account_user }} key="{{ item }}"
-  whith_items: github_ssh_keys.results
+  with_items: github_ssh_keys.content
   when: github_ssh_keys | count > 0
