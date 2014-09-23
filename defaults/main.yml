@@ -1,0 +1,10 @@
+---
+
+my_account_user: guest
+my_account_name: Guest User
+my_account_shell: /bin/bash
+my_account_ssh_pub_keys:
+  - ~guest/.ssh/id_rsa.pub
+  - ~guest/.ssh/id_dsa.pub
+my_account_github_user: guest
+my_account_can_sudo_root: True

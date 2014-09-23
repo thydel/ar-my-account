@@ -1,0 +1,6 @@
+.hg/
+.hgignore
+.hgremote
+.gitremote
+.gitconfig
+README.html

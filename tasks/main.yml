@@ -1,0 +1,28 @@
+---
+
+- name: my-account - create user account
+  user: name={{ my_account_user }} comment='{{ my_account_name }}' shell={{ my_account_shell }}
+
+- name: my-account - install SSH keys from vars
+  authorized_key: user={{ my_account_user }} key="{{ lookup('file', item) }}"
+  whith_items: my_account_ssh_pub_keys
+
+- set_facts:
+    rsa: .ssh/id_rsa.pub
+
+- name: my-account - check SSH keys from default rsa path
+  local_action: stat path=~{{ my_account_user }}/{{ rsa }}
+  register: rsa
+
+- name: my-account - install SSH keys from default rsa path
+  authorized_key: user={{ my_account_user }} key="{{ lookup('file', my_account_user + '/' + rsa ) }}"
+  when: rsa.stat.exists
+
+- name: my-account - fetch keys from github user account
+  uri: url=https://github.com/{{ my_account_github_user }}.keys return_content=true
+  register: github_ssh_keys
+
+- name: my-account - install keys from github user account
+  authorized_key: user={{ my_account_user }} key="{{ item }}"
+  whith_items: github_ssh_keys.results
+  when: github_ssh_keys | count > 0
