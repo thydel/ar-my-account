@@ -3,8 +3,14 @@
 my_account_user: guest
 my_account_name: Guest User
 my_account_shell: /bin/bash
-my_account_ssh_pub_keys:
-#  - ~guest/.ssh/id_rsa.pub
-#  - ~guest/.ssh/id_dsa.pub
+my_account_ssh_pub_keys: []
+#  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCvpcV/YrKWewCJmN7pwF1uJRKrQwuD2NrD/PA1OEa/Hh9ykbc/rC3dtXgCQ5QtDzQ2ZFwG4BIEZKywFv/AyogwI7L4K6n7MrI5G64lubmyHTnNzdcMIgrPwSloZbPCLx+Pb6FqR2oDhq7kow7yr1HPl2iCWM/iVQqKVcxyVUqnREQCMlhqxyJA6jTUAaknfZQYDB1qASjMQEkvrIPlzMHEAEGKlaAgUxUnwU8YITyge/QxuD7RGoqALgihm+We0BbQKTuRv8cRkgmICr/MDSnT+Lz4CXcB0iHPU6cyZ90sgoxER0YTWA9XhTpOBtHHRrV6sdWGDcYncVaoSob7jUUj
+my_account_ssh_pub_key_files: []
+#  - ~guest/.ssh/guest-id_rsa.pub
+#  - ~guest/.ssh/guest-id_dsa.pub
 my_account_github_user: guest
-my_account_can_sudo_root: True
+my_account_use:
+  - keys
+  - key_files
+  - std_files
+  - github

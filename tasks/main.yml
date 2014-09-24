@@ -1,60 +1,57 @@
 ---
 
+# account
+
 - name: my-account - create user account for {{ my_account_user }}
   user: name={{ my_account_user }} comment='{{ my_account_name }}' shell={{ my_account_shell }}
 
-# vars
+# ssh pub keys from vars
 
-- name: my-account - install SSH keys from vars
-  authorized_key: user={{ my_account_user }} key="{{ lookup('file', item) }}"
+- name: my-account - install SSH keys from keys list var
+  authorized_key: user={{ my_account_user }} key='{{ item }}'
   with_items: my_account_ssh_pub_keys
+  when: my_account_use | intersect(['keys'])
 
-# set default name
+- name: my-account - install SSH keys from key_files list var
+  authorized_key: user={{ my_account_user }} key="{{ lookup('file', item) }}"
+  with_items: my_account_ssh_pub_key_files
+  when: my_account_use | intersect(['key_files'])
+
+# ssh pub keys from std files
+
+- name: my-account - check SSH keys from default paths
+  local_action: stat path=~{{ my_account_user }}/{{ item }}
+  register: key_files
+  with_items:
+    - .ssh/id_rsa.pub
+    - .ssh/id_dsa.pub
+
+- name: my-account - install SSH keys from default paths
+  authorized_key:
+    user={{ my_account_user }}
+    key="{{ lookup('file', '~' + my_account_user + '/' + item.item ) }}"
+  with_items: key_files.results
+  when: item.stat.exists and my_account_use | intersect(['std_files'])
+
+# ssh pub keys from github
 
 - set_fact:
-    rsa: .ssh/id_rsa.pub
-    dsa: .ssh/id_dsa.pub
-
-# rsa
-
-- name: my-account - check SSH keys from default rsa path
-  local_action: stat path=~{{ my_account_user }}/{{ rsa }}
-  register: rsa_file
-
-- name: my-account - get SSH keys from default rsa path
-  set_fact:
-    rsa_key: "{{ lookup('file', '~' + my_account_user + '/' + rsa ) }}"
-  when: rsa_file.stat.exists
-
-- name: my-account - install SSH keys from default rsa path
-  authorized_key: user={{ my_account_user }} key="{{ rsa_key }}"
-  when: rsa_file.stat.exists and false
-
-# dsa
-
-- name: my-account - check SSH keys from default dsa path
-  local_action: stat path=~{{ my_account_user }}/{{ dsa }}
-  register: dsa_file
-
-- name: my-account - get SSH keys from default dsa path
-  set_fact:
-    dsa_key: "{{ lookup('file', '~' + my_account_user + '/' + dsa ) }}"
-  when: dsa_file.stat.exists
-
-- name: my-account - install SSH keys from default dsa path
-  authorized_key: user={{ my_account_user }} key="{{ dsa_key }}"
-  when: dsa_file.stat.exists
-
-# github
+    github: |
+      {{ 'github' in my_account_use }}
 
 - name: my-account - install httplib2
   apt: name=python-httplib2
+  when: github
 
 - name: my-account - fetch keys from github user account
   uri: url=https://github.com/{{ my_account_github_user }}.keys return_content=true
   register: github_ssh_keys
+  when: github
 
 - name: my-account - install keys from github user account
-  authorized_key: user={{ my_account_user }} key="{{ item }}"
+  authorized_key: user={{ my_account_user }} key='{{ item }}'
   with_items: github_ssh_keys.content
-  when: github_ssh_keys | count > 0
+  when:
+    github
+    and not github_ssh_keys | skipped
+    and github_ssh_keys | count > 0
