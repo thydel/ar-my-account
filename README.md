@@ -1,4 +1,4 @@
-# First user
+# my-account
 
 - Create a first user after a base image install of a node
 - Install user ssh pub keys from various sources:
