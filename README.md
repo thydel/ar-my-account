@@ -45,7 +45,7 @@ None
   gather_facts: no
 
   roles:
-    - role: my-account
+    - role: thydel.my-account
       my_account_user: thy
       my_account_name: Thierry Delamare
       my_account_github_user: thydel
